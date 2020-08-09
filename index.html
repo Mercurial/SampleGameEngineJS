@@ -34,7 +34,7 @@
     var startDate;
     const GAME_WIDTH = 1024;
     const GAME_HEIGHT = 768;
-    const GRAVITY = -0.1;
+    const GRAVITY = -0.05;
     const TARGET_FPS = 60;
     var spriteX = 0;
     var y = 0;
@@ -43,9 +43,10 @@
     var charY = 0;
     var platformX = 0;
     var platformY = GAME_HEIGHT - 50;
-    var platformW = 400;
+    var platformW = 700;
     var platformH = 50;
     var charSpeedY = 0;
+    var charSpeedX = 0;
     var radius = 50;
     var scale = 1 * radius;
 
@@ -70,6 +71,7 @@
       startDate = moment().valueOf();
 
       document.onkeypress = onDocument_KeyPressed;
+      document.onkeyup = onDocument_KeyUp;
 
       setInterval(draw, 1000 / TARGET_FPS);
       setInterval(update, 1000 / TARGET_FPS);
@@ -110,6 +112,7 @@
       updateGameTime();
       updateFPS();
       updateGravity();
+      updateXPos();
     }
 
     function updateGameTime() {
@@ -129,33 +132,61 @@
         }
     }
 
+    var DidJump = false;
     function updateGravity() {
-      if(!isCharacterCollideWithPlatform())
+      if(!isCharacterCollideWithPlatform() || DidJump)
       {
-        // charSpeedY += (GRAVITY / (1000 / TARGET_FPS)) / 2;
-        var normalizedT = elapasedT / 10;
-        console.log(charSpeedY);
-        var newCharY = (charSpeedY * normalizedT * -1) - (0.5 * GRAVITY * normalizedT * normalizedT);
-        charSpeedY = ((newCharY - charY) * -1) / (gameDeltaT * 10);
+        var newCharY = charY - (charSpeedY * gameDeltaT) - (0.5 * GRAVITY * gameDeltaT * gameDeltaT);
+        charSpeedY = (charY - newCharY) / gameDeltaT;
         charY = newCharY;
       }
       else {
         charY = platformY - platformH - scale;
+        DidJump = false;
       }
+      DidJump = false;
     }
 
     function applyJumpForce() {
-      charSpeedY = 0.9;
+      DidJump = true;
+      charSpeedY = 3;
     }
 
     function onDocument_KeyPressed(e) {
-      if(e.keyCode == 32) {
-        applyJumpForce();
+      switch(e.keyCode)
+      {
+        case 32:
+          applyJumpForce();
+          break;
+        case 100:
+          charSpeedX = 10;
+          break;
+        case 97:
+          charSpeedX = -10;
+          break;
+        default:
+          break;
       }
     }
 
+    function onDocument_KeyUp(e) {
+      if(e.keyCode == 65)
+      {
+        charSpeedX += 10;
+      }
+      if(e.keyCode == 68)
+      {
+        charSpeedX -= 10;
+      }
+    }
+
+    function updateXPos()
+    {
+      charX += charSpeedX;
+    }
+
     function isCharacterCollideWithPlatform() {
-      return charY + scale >= platformY - platformH;
+      return charY + scale >= platformY - platformH && charX + scale <= platformX + platformW;
     }
 
   </script>
